@@ -29,24 +29,24 @@ class RegisteredUserController extends Controller
      *
      * @throws \Illuminate\Validation\ValidationException
      */
-    public function store(Request $request): RedirectResponse
+    public function store(Request $request)
     {
         $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|string|lowercase|email|max:255|unique:'.User::class,
+            'name' => ['required', 'string', 'max:255'],
+            'email' => ['required', 'string', 'email', 'max:255', 'unique:user'],
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
+            'role' => ['required', 'in:user,admin'], // Validasi role
         ]);
 
         $user = User::create([
             'name' => $request->name,
             'email' => $request->email,
             'password' => Hash::make($request->password),
+            'role' => $request->role, // Simpan role
         ]);
 
-        event(new Registered($user));
+        auth()->login($user);
 
-        Auth::login($user);
-
-        return redirect(RouteServiceProvider::HOME);
+        return redirect('/redirect'); // Redirect ke halaman sesuai role
     }
 }
